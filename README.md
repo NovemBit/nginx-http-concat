@@ -14,4 +14,5 @@ Installation & Configuration
 `RewriteCond %{REQUEST_URI} ^/your_subdomain/_static/$ 
 RewriteRule (.*) /your_subdomain/wp-content/plugins/http-concat/ngx-http-concat.php [L]`
 3.Activate 2 plugins Css concat and JS concat
+4.In nginx-http-concat.php file change defined subdomain
 
