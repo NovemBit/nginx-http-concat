@@ -26,7 +26,7 @@ $concat_types = array(
 $path = dirname( __DIR__ );
 $normalize_path = str_replace('\\','/',$path);
 define( 'CONCAT_FILES_ROOT', substr( $normalize_path, 0, strpos( $normalize_path, '/wp-content' ) ) );
-define('YOUR_SUBDOMAIN', '/duson');
+define('YOUR_SUBDOMAIN', '/enter_your_subdomain');
 function concat_http_status_exit( $status ) {
 	switch ( $status ) {
 		case 200:
