@@ -10,8 +10,6 @@
  *
  * It will also replace the relative paths in CSS files with absolute paths.
  */
-
-
 require_once( __DIR__ . '/cssmin/cssmin.php' );
 require_once( __DIR__ . '/concat-utils.php' );
 
@@ -25,8 +23,10 @@ $concat_types = array(
 
 /* Constants */
 // By default determine the document root from this scripts path in the plugins dir (you can hardcode this define)
-define( 'CONCAT_FILES_ROOT', substr( dirname( __DIR__ ), 0, strpos( dirname( __DIR__ ), '/wp-content' ) ) );
-
+$path = dirname( __DIR__ );
+$normalize_path = str_replace('\\','/',$path);
+define( 'CONCAT_FILES_ROOT', substr( $normalize_path, 0, strpos( $normalize_path, '/wp-content' ) ) );
+define('YOUR_SUBDOMAIN', '/duson');
 function concat_http_status_exit( $status ) {
 	switch ( $status ) {
 		case 200:
@@ -69,12 +69,12 @@ function concat_get_mtype( $file ) {
 }
 
 function concat_get_path( $uri ) {
+	$uri = substr($uri, strlen(YOUR_SUBDOMAIN));
 	if ( ! strlen( $uri ) )
 		concat_http_status_exit( 400 );
-
+		
 	if ( false !== strpos( $uri, '..' ) || false !== strpos( $uri, "\0" ) )
 		concat_http_status_exit( 400 );
-
 	return CONCAT_FILES_ROOT . ( '/' != $uri[0] ? '/' : '' ) . $uri;
 }
 
@@ -96,7 +96,7 @@ $args = substr( $args, strpos( $args, '?' ) + 1 );
 // -eJzTT8vP109KLNJLLi7W0QdyDEE8IK4CiVjn2hpZGluYmKcDABRMDPM=
 if ( '-' == $args[0] ) {
 	$args = @gzuncompress( base64_decode( substr( $args, 1 ) ) );
-
+	
 	// Invalid data, abort!
 	if ( false === $args ) {
 		concat_http_status_exit( 400 );
@@ -109,7 +109,14 @@ if ( false !== $version_string_pos )
 	$args = substr( $args, 0, $version_string_pos );
 
 // /foo/bar.css,/foo1/bar/baz.css
+
 $args = explode( ',', $args );
+$real_args = [];
+foreach ($args as $value) {
+	$new_value = str_replace("\\","/",$value);
+	$real_args[] = YOUR_SUBDOMAIN . $new_value;
+}
+$args = $real_args;
 if ( ! $args )
 	concat_http_status_exit( 400 );
 
@@ -125,9 +132,8 @@ $css_minify = new tubalmartin\CssMin\Minifier;
 
 foreach ( $args as $uri ) {
 	$fullpath = concat_get_path( $uri );
-
 	if ( ! file_exists( $fullpath ) )
-		concat_http_status_exit( 404 );
+	 concat_http_status_exit( 404 );
 
 	$mime_type = concat_get_mtype( $fullpath );
 	if ( ! in_array( $mime_type, $concat_types ) )

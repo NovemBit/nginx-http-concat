@@ -68,6 +68,16 @@ class WPcom_JS_Concat extends WP_Scripts {
 			$js_url_parsed = parse_url( $js_url );
 			$extra = $obj->extra;
 
+			// Check for scripts added from wp_add_inline_script()
+			$before_handle = $this->print_inline_script( $handle, 'before', false );
+			$after_handle = $this->print_inline_script( $handle, 'after', false );
+			if ( $before_handle ) {
+				$before_handle = sprintf( "<script type='text/javascript'>\n%s\n</script>\n", $before_handle );
+			}
+			if ( $after_handle ) {
+				$after_handle = sprintf( "<script type='text/javascript'>\n%s\n</script>\n", $after_handle );
+			}
+
 			// Don't concat by default
 			$do_concat = false;
 
@@ -84,22 +94,10 @@ class WPcom_JS_Concat extends WP_Scripts {
 			// Concat and canonicalize the paths only for
 			// existing scripts that aren't outside ABSPATH
 			$js_realpath = WPCOM_Concat_Utils::realpath( $js_url, $siteurl );
-			if ( ! $js_realpath || 0 !== strpos( $js_realpath, ABSPATH ) )
+			if ( ! $js_realpath || 0 !== strpos( $js_realpath, realpath(ABSPATH) ) )
 				$do_concat = false;
 			else
 				$js_url_parsed['path'] = substr( $js_realpath, strlen( ABSPATH ) - 1 );
-
-			// Check for scripts added from wp_add_inline_script()
-			$before_handle = $this->print_inline_script( $handle, 'before', false );
-			$after_handle = $this->print_inline_script( $handle, 'after', false );
-			if ( $before_handle ) {
-				$do_concat = false;
-				$before_handle = sprintf( "<script type='text/javascript'>\n%s\n</script>\n", $before_handle );
-			}
-			if ( $after_handle ) {
-				$after_handle = sprintf( "<script type='text/javascript'>\n%s\n</script>\n", $after_handle );
-				$do_concat = false;
-			}
 
 			// Allow plugins to disable concatenation of certain scripts.
 			$do_concat = apply_filters( 'js_do_concat', $do_concat, $handle );
@@ -171,7 +169,6 @@ class WPcom_JS_Concat extends WP_Scripts {
 			}
 		}
 
-		do_action( 'js_concat_did_items', $javascripts );
 		return $this->done;
 	}
 
